@@ -52,12 +52,12 @@ pipeline {
         stage ('build & push') {
             steps {
                 container ('maven') {
-                    sh 'alias docker=podman'
+                    // sh 'alias docker=podman'
                     sh 'mvn -o -Dmaven.test.skip=true -gs `pwd`/configuration/settings.xml clean package'
-                    sh 'docker build -f Dockerfile-on-prem -t $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER .'
+                    sh 'podman build -f Dockerfile-on-prem -t $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER .'
                     withCredentials([usernamePassword(passwordVariable : 'DOCKER_PASSWORD' ,usernameVariable : 'DOCKER_USERNAME' ,credentialsId : "$HARBOR_CREDENTIAL_ID" ,)]) {
-                        sh 'echo "$DOCKER_PASSWORD" | docker login $REGISTRY -u "$DOCKER_USERNAME" --password-stdin'
-                        sh 'docker push  $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER'
+                        sh 'echo "$DOCKER_PASSWORD" | podman login $REGISTRY -u "$DOCKER_USERNAME" --password-stdin'
+                        sh 'podman push  $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER'
                     }
                 }
             }
@@ -69,9 +69,9 @@ pipeline {
            }
            steps{
                 container ('maven') {
-                  sh 'alias docker=podman'
-                  sh 'docker tag  $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:latest '
-                  sh 'docker push  $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:latest '
+                  // sh 'alias docker=podman'
+                  sh 'podman tag  $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:latest '
+                  sh 'podman push  $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:latest '
                 }
            }
         }
@@ -100,8 +100,8 @@ pipeline {
                     sh 'git tag -a $TAG_NAME -m "$TAG_NAME" '
                     sh 'git push http://$GIT_USERNAME:$GIT_PASSWORD@gitlab.devops.kubesphere.local:30080/$GITLAB_ACCOUNT/devops-java-sample.git --tags --ipv4'
                   }
-                sh 'docker tag  $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:$TAG_NAME '
-                sh 'docker push  $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:$TAG_NAME '
+                sh 'podman tag  $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:$TAG_NAME '
+                sh 'podman push  $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:$TAG_NAME '
           }
           }
         }
